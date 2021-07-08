@@ -33,11 +33,10 @@ def process_pool(size):
     pool.join()
 
 
-def parallel_quick_sort(start, end, chunk, results, process_id):
+def parallel_quick_sort(chunk, results, process_id, pivot):
     low_list = []
     high_list = []
 
-    pivot = chunk[0]
     for number in chunk:
         if number <= pivot:
             low_list.append(number)
@@ -56,30 +55,21 @@ def swap(results, process_count):
         results[n + process_count // 2] = right_process
 
 
-def parallel_sort_multiple(results, chunk, process_id):
-    parallel_quick_sort(0, len(chunk) - 1, chunk, results, process_id)
+def parallel_sort_multiple(results, chunk, process_id, pivot):
+    parallel_quick_sort(chunk, results, process_id, pivot)
 
 
 def merge(results, process_count):
-    index_tuple_list = []
-    lower = process_count // 2
-    index = -1
     new_list = []
     for n in range(process_count):
-        start = len(new_list)
-        new_list.extend(results[n][0] + results[n][1])
-        if n < lower:
-            index = len(new_list)
+        new_list.append(results[n][0] + results[n][1])
 
-        if n < process_count - 1 and len(results[n+1][0] + results[n+1][0]):
-            index_tuple_list.append((start, len(new_list)))
-        elif n < process_count and len():
-            index_tuple_list.append((start, len(new_list) -1))
-
-    return [index_tuple_list, index, new_list]
+    return new_list
 
 
 def perform_parallel_quick_sort(array, process_count):
+    global_arrangement = []
+
     if process_count > 1:
         length = len(array)
         # Divide the list in chunks
@@ -99,19 +89,21 @@ def perform_parallel_quick_sort(array, process_count):
                     # Get the remaining elements in the list
                     chunk = array[n * step:]
 
-                pool.apply_async(parallel_sort_multiple, (results, chunk, n))
+                pool.apply_async(parallel_sort_multiple, (results, chunk, n, array[0]))
 
         swap(results, process_count)
-        index_tuple_list, middle, new_list = merge(results, process_count)
+        new_list = merge(results, process_count)
+        print(new_list)
+
+        _perform_parallel_quick_sort(new_list[:process_count // 2], process_count // 2, global_arrangement)
+        _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2, global_arrangement)
+
+        # print(global_arrangement)
 
 
-        _perform_parallel_quick_sort(new_list, index_tuple_list[:process_count // 2], process_count // 2)
-        _perform_parallel_quick_sort(new_list, index_tuple_list[process_count // 2:], process_count // 2)
+def _perform_parallel_quick_sort(array, process_count, global_arrangement):
 
-
-def _perform_parallel_quick_sort(array, index_tuple_list, process_count):
-    if process_count >= 1:
-        length = len(array)
+    if process_count > 1:
 
         # Instantiate a multiprocessing.Manager object to
         # store the output of each process.
@@ -121,18 +113,18 @@ def _perform_parallel_quick_sort(array, index_tuple_list, process_count):
         with process_pool(size=process_count) as pool:
 
             for n in range(process_count):
-                a = array[index_tuple_list[n][0]:index_tuple_list[n][1]+1]
-
-                pool.apply_async(parallel_sort_multiple,
-                                 (results, a, n))
-
-
+                if array[n]:
+                    pool.apply_async(parallel_sort_multiple, (results, array[n], n, array[0][0]))
 
         swap(results, process_count)
-        index_tuple_list, middle, new_list = merge(results, process_count)
+        new_list = merge(results, process_count)
 
         print(new_list)
-        print(index_tuple_list)
 
-        _perform_parallel_quick_sort(new_list, index_tuple_list[:process_count // 2], process_count // 2)
-        _perform_parallel_quick_sort(new_list, index_tuple_list[process_count // 2:], process_count // 2)
+        _perform_parallel_quick_sort(new_list[:process_count // 2], process_count // 2, global_arrangement)
+        _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2,global_arrangement)
+
+    else:
+        arr = array[0]
+        quick_sort(0, len(arr) - 1, arr)
+        global_arrangement.extend(arr)

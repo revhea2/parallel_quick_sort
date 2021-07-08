@@ -9,31 +9,15 @@ if __name__ == '__main__':
     processor_count = cpu_count()
 
     # timer
-    main_timer = Timer('single_core', "multiple_core")
+    main_timer = Timer("multiple_core")
 
     # length of the input list
-    length = 100000
+    length = 12
 
     # generates list and shuffles them
     input_list = [x for x in range(length)]
     random.shuffle(input_list)
-    # copies the input list for single core evaluation
-    single_core_input_list = input_list[:]
 
-    # Start timing the single-core procedure
-    main_timer.start_for('single_core')
-
-    # do serial quick sort
-    quick_sort(0, length - 1, single_core_input_list)
-
-    # stops timing the single-core procedure
-    main_timer.stop_for('single_core')
-
-    # prints all the data from the serial quick sort
-    print("Verification of quick sort: ", single_core_input_list == sorted(input_list))
-    print(f"Single Core elapsed time: {round(main_timer['single_core'], 10)}")
-
-    # main_timer.start_for('multiple_cores')
     print("Starting parallel quick sort")
 
     main_timer.start_for("multiple_core")
