@@ -1,26 +1,8 @@
-from multiprocessing import Manager, Pool, cpu_count
+from multiprocessing import Manager, Pool
 from contextlib import contextmanager
 
 from quickSort import quick_sort
-from timer import Timer
 
-
-class LowHigh:
-    def __init__(self, low_list=[], high_list=[]):
-        self.low_list = low_list
-        self.high_list = high_list
-
-    def reset(self):
-        self.low_list = []
-        self.high_list = []
-
-    def __repr__(self):
-        strs = "bitches: "
-        for l in self.low_list:
-            strs += l + " "
-        for l in self.high_list:
-            strs += l + " "
-        return strs
 
 
 @contextmanager
