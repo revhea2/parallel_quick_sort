@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from quickSort import quick_sort
 
 
-
 @contextmanager
 def process_pool(size):
     """Create a process pool and block until
@@ -52,39 +51,42 @@ def merge(results, process_count):
 def perform_parallel_quick_sort(array, process_count):
     global_arrangement = []
 
-    if process_count > 1:
-        length = len(array)
-        # Divide the list in chunks
-        step = length // process_count
+    length = len(array)
+    # Divide the list in chunks
+    step = length // process_count
 
-        # Instantiate a multiprocessing.Manager object to
-        # store the output of each process.
-        manager = Manager()
-        results = manager.dict()
+    # Instantiate a multiprocessing.Manager object to
+    # store the output of each process.
+    manager = Manager()
+    results = manager.dict()
 
-        with process_pool(size=process_count) as pool:
+    with process_pool(size=process_count) as pool:
 
-            for n in range(process_count):
-                if n < process_count - 1:
-                    chunk = array[n * step:(n + 1) * step]
-                else:
-                    # Get the remaining elements in the list
-                    chunk = array[n * step:]
+        for n in range(process_count):
+            if n < process_count - 1:
+                chunk = array[n * step:(n + 1) * step]
+            else:
+                # Get the remaining elements in the list
+                chunk = array[n * step:]
 
-                pool.apply_async(parallel_sort_multiple, (results, chunk, n, array[0]))
+            pool.apply_async(parallel_sort_multiple, (results, chunk, n, array[0]))
 
-        swap(results, process_count)
-        new_list = merge(results, process_count)
-        print(new_list)
+    for n in range(process_count):
+        print("Process ID: ", n)
+        print("lower_partition: ", results[n][0])
+        print("higher_partition: ", results[n][1])
 
-        _perform_parallel_quick_sort(new_list[:process_count // 2], process_count // 2, global_arrangement)
-        _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2, global_arrangement)
+    swap(results, process_count)
+    new_list = merge(results, process_count)
+    print(new_list)
 
-        # print(global_arrangement)
+    _perform_parallel_quick_sort(new_list[:process_count // 2], process_count // 2, global_arrangement)
+    _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2, global_arrangement)
+
+    print(global_arrangement)
 
 
 def _perform_parallel_quick_sort(array, process_count, global_arrangement):
-
     if process_count > 1:
 
         # Instantiate a multiprocessing.Manager object to
@@ -104,7 +106,7 @@ def _perform_parallel_quick_sort(array, process_count, global_arrangement):
         print(new_list)
 
         _perform_parallel_quick_sort(new_list[:process_count // 2], process_count // 2, global_arrangement)
-        _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2,global_arrangement)
+        _perform_parallel_quick_sort(new_list[process_count // 2:], process_count // 2, global_arrangement)
 
     else:
         arr = array[0]
