@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print("Starting parallel quick sort")
 
     main_timer.start_for("multiple_core")
-    # debug_list = [7, 4, 8, 5, 3, 9, 2, 0, 1, 6, 10, 11]
-    perform_parallel_quick_sort(input_list, processor_count)
+    debug_list = [7, 4, 8, 5, 3, 9, 2, 0, 1, 6, 10, 11]
+    perform_parallel_quick_sort(debug_list, processor_count)
     main_timer.stop_for("multiple_core")
     print(f"Multiple Core elapsed time: {round(main_timer['multiple_core'], 10)}")

@@ -56,40 +56,83 @@ def swap(results, process_count):
         results[n + process_count // 2] = right_process
 
 
-def parallel_sort_multiple(results, chunk, process_id, limit):
-    if limit == 0:
-        # will be doing local quick sort
-        pass
+def parallel_sort_multiple(results, chunk, process_id):
+    parallel_quick_sort(0, len(chunk) - 1, chunk, results, process_id)
 
-    parallel_quick_sort(0, len(chunk) - 1, chunk, results,  process_id)
 
+def merge(results, process_count):
+    index_tuple_list = []
+    lower = process_count // 2
+    index = -1
+    new_list = []
+    for n in range(process_count):
+        start = len(new_list)
+        new_list.extend(results[n][0] + results[n][1])
+        if n < lower:
+            index = len(new_list)
+
+        if n < process_count - 1 and len(results[n+1][0] + results[n+1][0]):
+            index_tuple_list.append((start, len(new_list)))
+        elif n < process_count and len():
+            index_tuple_list.append((start, len(new_list) -1))
+
+    return [index_tuple_list, index, new_list]
 
 
 def perform_parallel_quick_sort(array, process_count):
-    length = len(array)
-    # Divide the list in chunks
-    step = length // process_count
+    if process_count > 1:
+        length = len(array)
+        # Divide the list in chunks
+        step = length // process_count
 
-    # Instantiate a multiprocessing.Manager object to
-    # store the output of each process.
-    manager = Manager()
-    results = manager.dict()
-    sorted_list = manager.list()
+        # Instantiate a multiprocessing.Manager object to
+        # store the output of each process.
+        manager = Manager()
+        results = manager.dict()
 
-    with process_pool(size=process_count) as pool:
+        with process_pool(size=process_count) as pool:
 
-        for n in range(process_count):
-            if n < process_count - 1:
-                chunk = array[n * step:(n + 1) * step]
-            else:
-                # Get the remaining elements in the list
-                chunk = array[n * step:]
+            for n in range(process_count):
+                if n < process_count - 1:
+                    chunk = array[n * step:(n + 1) * step]
+                else:
+                    # Get the remaining elements in the list
+                    chunk = array[n * step:]
 
-            pool.apply_async(parallel_sort_multiple, (results, chunk, n, process_count))
+                pool.apply_async(parallel_sort_multiple, (results, chunk, n))
 
-
-
-    swap(results, process_count)
-
+        swap(results, process_count)
+        index_tuple_list, middle, new_list = merge(results, process_count)
 
 
+        _perform_parallel_quick_sort(new_list, index_tuple_list[:process_count // 2], process_count // 2)
+        _perform_parallel_quick_sort(new_list, index_tuple_list[process_count // 2:], process_count // 2)
+
+
+def _perform_parallel_quick_sort(array, index_tuple_list, process_count):
+    if process_count >= 1:
+        length = len(array)
+
+        # Instantiate a multiprocessing.Manager object to
+        # store the output of each process.
+        manager = Manager()
+        results = manager.dict()
+
+        with process_pool(size=process_count) as pool:
+
+            for n in range(process_count):
+                a = array[index_tuple_list[n][0]:index_tuple_list[n][1]+1]
+
+                pool.apply_async(parallel_sort_multiple,
+                                 (results, a, n))
+
+
+
+        swap(results, process_count)
+        index_tuple_list, middle, new_list = merge(results, process_count)
+
+        print(new_list)
+        print(index_tuple_list)
+
+        _perform_parallel_quick_sort(new_list, index_tuple_list[:process_count // 2], process_count // 2)
+        _perform_parallel_quick_sort(new_list, index_tuple_list[process_count // 2:], process_count // 2)
